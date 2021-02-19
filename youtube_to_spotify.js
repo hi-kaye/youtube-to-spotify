@@ -137,8 +137,8 @@ async function getPlaylistVideoUrls() {
   let videos = await getPlaylist();
   let arrayofallvideos = [];
   videos.forEach((element) => {
-    var youtube_id = element.snippet.resourceId.videoId;
-    var youtube_url = `https://www.youtube.com/watch?v=${youtube_id}`;
+    let youtube_id = element.snippet.resourceId.videoId;
+    let youtube_url = `https://www.youtube.com/watch?v=${youtube_id}`;
     arrayofallvideos.push(youtube_url);
   });
   return arrayofallvideos;
