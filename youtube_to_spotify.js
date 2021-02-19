@@ -4,9 +4,8 @@ var { google } = require("googleapis");
 var OAuth2 = google.auth.OAuth2;
 var cs = require("./client_secret.json");
 var youtubedl = require("youtube-dl");
-var { spotify_token, spotify_user_id } = require("./spotify_secrets");
+var { spotifyToken, spotifyUserId } = require("./spotify_secrets");
 var superagent = require("superagent");
-var { youtube } = require("googleapis/build/src/apis/youtube");
 
 //from google api quick start
 // If modifying these scopes, delete your previously saved credentials
@@ -109,7 +108,7 @@ function storeToken(token) {
  */
 
 async function getPlaylist(auth) {
-  let playlist_items;
+  let playlistItems;
   let service = google.youtube("v3");
   return new Promise((resolve, reject) => {
     service.playlistItems.list(
@@ -125,8 +124,8 @@ async function getPlaylist(auth) {
           reject("The API returned an error: " + err);
           return;
         }
-        playlist_items = response.data.items;
-        resolve(playlist_items);
+        playlistItems = response.data.items;
+        resolve(playlistItems);
       }
     );
   });
@@ -135,23 +134,23 @@ async function getPlaylist(auth) {
 //returns array of urls
 async function getPlaylistVideoUrls() {
   let videos = await getPlaylist();
-  let arrayofallvideos = [];
+  let arrayOfAllVideos = [];
   videos.forEach((element) => {
-    let youtube_id = element.snippet.resourceId.videoId;
-    let youtube_url = `https://www.youtube.com/watch?v=${youtube_id}`;
-    arrayofallvideos.push(youtube_url);
+    let youtubeId = element.snippet.resourceId.videoId;
+    let youtubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+    arrayOfAllVideos.push(youtubeUrl);
   });
-  return arrayofallvideos;
+  return arrayOfAllVideos;
 }
 
 //get video artist and song name array
 async function getVideoInfo() {
-  let video_urls = await getPlaylistVideoUrls();
-  let youtube_data = [];
-  for (var i = 0; i < video_urls.length; i++) {
-    youtube_data.push(getYoutubeData(video_urls[i]));
+  let videoUrls = await getPlaylistVideoUrls();
+  let youtubeData = [];
+  for (var i = 0; i < videoUrls.length; i++) {
+    youtubeData.push(getYoutubeData(videoUrls[i]));
   }
-  return Promise.all(youtube_data)
+  return Promise.all(youtubeData)
     .then((results) => {
       return results;
     })
@@ -161,29 +160,29 @@ async function getVideoInfo() {
 }
 
 //returns a JSON object containg artist and song name
-function getYoutubeData(video_urls) {
+function getYoutubeData(videoUrls) {
   return new Promise((resolve) => {
-    youtubedl.getInfo(video_urls, function (err, info) {
+    youtubedl.getInfo(videoUrls, function (err, info) {
       if (err) {
         throw err;
       }
-      return resolve({ artist: info.artist, song_name: info.track });
+      return resolve({ artist: info.artist, songName: info.track });
     });
   });
 }
 
 //gets the spotify track URI from the extracted youtube data
-async function collectUri(video_data) {
-  let video_data = await getVideoInfo();
+async function collectUri() {
+  let videoData = await getVideoInfo();
   let artist;
-  let song_name;
-  let uri_array = [];
-  for (var i = 0; i < video_data.length; i++) {
-    artist = video_data[i].artist;
-    song_name = video_data[i].song_name;
-    uri_array.push(getSpotifyUri(song_name, artist));
+  let songName;
+  let uriArray = [];
+  for (var i = 0; i < videoData.length; i++) {
+    artist = videoData[i].artist;
+    songName = videoData[i].songName;
+    uriArray.push(getSpotifyUri(songName, artist));
   }
-  return Promise.all(uri_array)
+  return Promise.all(uriArray)
     .then((results) => {
       return results;
     })
@@ -193,17 +192,17 @@ async function collectUri(video_data) {
 }
 
 //generates the spotify uri
-function getSpotifyUri(song_name, artist) {
-  let track = song_name.replace(/\s/g, "%20");
-  let artist_no_space = artist.replace(/\s/g, "%20");
+function getSpotifyUri(songName, artist) {
+  let track = songName.replace(/\s/g, "%20");
+  let artistNoSpace = artist.replace(/\s/g, "%20");
   return new Promise((resolve, reject) => {
     superagent
       .get(
-        `https://api.spotify.com/v1/search?q=track%3A${track}+artist%3A${artist_no_space}&type=track&limit=1`
+        `https://api.spotify.com/v1/search?q=track%3A${track}+artist%3A${artistNoSpace}&type=track&limit=1`
       )
       .set({
         "Content-Type": "application/json",
-        Authorization: `Bearer ${spotify_token}`,
+        Authorization: `Bearer ${spotifyToken}`,
       })
       .end((err, res) => {
         if (err) {
@@ -219,7 +218,7 @@ function getSpotifyUri(song_name, artist) {
 function createSpotifyPlaylist() {
   return new Promise((resolve, reject) => {
     superagent
-      .post(`https://api.spotify.com/v1/users/${spotify_user_id}/playlists`)
+      .post(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists`)
       .send({
         name: "Youtube Music Playlist",
         description: "Playlist generated from Youtube playlist",
@@ -227,7 +226,7 @@ function createSpotifyPlaylist() {
       })
       .set({
         "Content-Type": "application/json",
-        Authorization: `Bearer ${spotify_token}`,
+        Authorization: `Bearer ${spotifyToken}`,
       })
       .end((err, res) => {
         if (err) {
@@ -241,18 +240,18 @@ function createSpotifyPlaylist() {
 
 //adds youtube playlist songs to newly created spotify playlist
 async function addSongToSpotifyPlaylist() {
-  let playlist_id = await createSpotifyPlaylist();
-  let track_uris = (await collectUri()).toString();
-  console.log("tracks added: ", track_uris);
-  console.log("to playlist: ", playlist_id);
+  let playlistId = await createSpotifyPlaylist();
+  let trackUris = (await collectUri()).toString();
+  console.log("tracks added: ", trackUris);
+  console.log("to playlist: ", playlistId);
 
   superagent
     .post(
-      `https://api.spotify.com/v1/playlists/${playlist_id}/tracks?uris=${track_uris}`
+      `https://api.spotify.com/v1/playlists/${playlistId}/tracks?uris=${trackUris}`
     )
     .set({
       "Content-Type": "application/json",
-      Authorization: `Bearer ${spotify_token}`,
+      Authorization: `Bearer ${spotifyToken}`,
     })
     .end((err, res) => {
       if (err) {
