@@ -109,8 +109,8 @@ function storeToken(token) {
  */
 
 async function getPlaylist(auth) {
-  var playlist_items;
-  var service = google.youtube("v3");
+  let playlist_items;
+  let service = google.youtube("v3");
   return new Promise((resolve, reject) => {
     service.playlistItems.list(
       {
@@ -134,8 +134,8 @@ async function getPlaylist(auth) {
 
 //returns array of urls
 async function getPlaylistVideoUrls() {
-  var videos = await getPlaylist();
-  var arrayofallvideos = [];
+  let videos = await getPlaylist();
+  let arrayofallvideos = [];
   videos.forEach((element) => {
     var youtube_id = element.snippet.resourceId.videoId;
     var youtube_url = `https://www.youtube.com/watch?v=${youtube_id}`;
@@ -146,8 +146,8 @@ async function getPlaylistVideoUrls() {
 
 //get video artist and song name array
 async function getVideoInfo() {
-  var video_urls = await getPlaylistVideoUrls();
-  var youtube_data = [];
+  let video_urls = await getPlaylistVideoUrls();
+  let youtube_data = [];
   for (var i = 0; i < video_urls.length; i++) {
     youtube_data.push(getYoutubeData(video_urls[i]));
   }
@@ -174,10 +174,10 @@ function getYoutubeData(video_urls) {
 
 //gets the spotify track URI from the extracted youtube data
 async function collectUri(video_data) {
-  var video_data = await getVideoInfo();
-  var artist;
-  var song_name;
-  var uri_array = [];
+  let video_data = await getVideoInfo();
+  let artist;
+  let song_name;
+  let uri_array = [];
   for (var i = 0; i < video_data.length; i++) {
     artist = video_data[i].artist;
     song_name = video_data[i].song_name;
@@ -241,8 +241,8 @@ function createSpotifyPlaylist() {
 
 //adds youtube playlist songs to newly created spotify playlist
 async function addSongToSpotifyPlaylist() {
-  var playlist_id = await createSpotifyPlaylist();
-  var track_uris = (await collectUri()).toString();
+  let playlist_id = await createSpotifyPlaylist();
+  let track_uris = (await collectUri()).toString();
   console.log("tracks added: ", track_uris);
   console.log("to playlist: ", playlist_id);
 
