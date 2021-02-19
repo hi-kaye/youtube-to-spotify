@@ -159,7 +159,7 @@ async function getVideoInfo() {
     });
 }
 
-//returns a JSON object containg artist and song name
+//returns a JSON object containing artist and song name
 function getYoutubeData(videoUrls) {
   return new Promise((resolve) => {
     youtubedl.getInfo(videoUrls, function (err, info) {
