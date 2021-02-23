@@ -107,7 +107,7 @@ function storeToken(token) {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 
-async function getPlaylist() {
+function getPlaylist() {
   let playlistItems;
   let service = google.youtube("v3");
   return new Promise((resolve, reject) => {
